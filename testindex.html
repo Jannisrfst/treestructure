@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+ul.tree {
+    list-style-type: none;
+    padding-left: 5px;
+}
+ul.tree ul {
+    margin-left: 5px;
+}
+ul.tree li {
+    line-height: 1;
+    margin: 0;
+    padding: 1px 0;
+    position: relative;
+}
+.folder, .file {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+.subfolders {
+    display: none;
+}
+.show {
+    display: block;
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Directory Tree</h1>
+    <ul id="tree" class="tree">
+    {% for folder in immediate_subfolders %}
+    <li>
+        <span class="folder" data-path="{{ folder }}">
+            <i class="bi bi-folder"></i>
+            {{ folder }}
+        </span>
+        <ul class="subfolders collapse"></ul>
+    </li>
+    {% endfor %}
+    </ul>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+    $('body').on('click', '.folder', function(event){
+        event.stopPropagation();
+        var $this = $(this);
+        var folderPath = $this.data('path');
+        var $subfolderList = $this.next('.subfolders');
+
+        if (!$subfolderList.hasClass('loaded')) {
+            $.ajax({
+                url: '/subfolders',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ path: folderPath }),
+                success: function(data) {
+                    $subfolderList.empty();
+                    renderSubfoldersAndFiles($subfolderList, data, folderPath);
+                    $subfolderList.addClass('loaded show');
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error requesting subfolders:', error);
+                }
+            });
+        } else {
+            $subfolderList.toggleClass('show');
+        }
+    });
+
+    function renderSubfoldersAndFiles($list, data, basePath) {
+        var subfolders = data.subfolders;
+        var files = data.files;
+        subfolders.forEach(function(folder) {
+            var fullPath = basePath + '/' + folder;
+            $list.append('<li><span class="folder" data-path="' + fullPath + '"><i class="bi bi-folder"></i> ' + folder + '</span><ul class="subfolders collapse"></ul></li>');
+        });
+        files.forEach(function(file) {
+            var iconClass = getFileIcon(file);
+            $list.append('<li><span class="file"><i class="' + iconClass + '"></i> ' + file + '</span></li>');
+        });
+    }
+
+    function getFileIcon(filename) {
+        var extension = filename.split('.').pop().toLowerCase();
+        switch(extension) {
+            case 'pdf':
+                return 'bi bi-filetype-pdf';
+            case 'doc':
+            case 'docx':
+                return 'bi bi-filetype-doc';
+            case 'xls':
+            case 'xlsx':
+                return 'bi bi-filetype-xls';
+            case 'txt':
+                return 'bi bi-filetype-text';
+            case 'jpg':
+            case 'jpeg':
+                return 'bi bi-filetype-jpg';
+            case 'png':
+                return 'bi bi-filetype-png';
+            case 'zip':
+                return 'bi bi-filetype-zip';
+            case 'mp3':
+                return 'bi bi-filetype-mp3';
+            case 'mp4':
+                return 'bi bi-filetype-mp4';
+            default:
+                return 'bi bi-file-earmark';
+        }
+    }
+});
+</script>
+</body>
+</html>

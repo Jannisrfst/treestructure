@@ -8,17 +8,17 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 app = Flask(__name__)
 
-def list_subfolders(startpath):
+def list_subfolders(startpath): #  Gibt eine Liste aller Unterordner in einem Verzeichnis zurück
     """List all subfolders in the given directory path."""
     subfolders = [f for f in os.listdir(startpath) if os.path.isdir(os.path.join(startpath, f))]
     return subfolders
 
-def list_files(startpath):
+def list_files(startpath): # Gibt eine Liste aller Dateien in einem Verzeichnis zurück
     """List all files in the given directory path."""
     files = [f for f in os.listdir(startpath) if os.path.isfile(os.path.join(startpath, f))]
     return files
 
-@app.route('/')
+@app.route('/') 
 def index():
     """Render the main page with a list of subfolders from a predefined path."""
     root_path = r'C:\Users\JannisReufsteck\Documents'

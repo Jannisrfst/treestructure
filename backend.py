@@ -57,6 +57,7 @@ def files(filename):
     logging.info(f"Detected MIME type: {mime_type}")
 
     try:
+        # Serve the file for download
         directory = os.path.dirname(file_path)
         file_basename = os.path.basename(file_path)
         response = send_from_directory(directory=directory, path=file_basename, as_attachment=True)
@@ -83,12 +84,11 @@ def view_file(filename):
     logging.info(f"Detected MIME type: {mime_type}")
 
     try:
-        if mime_type and (mime_type.startswith('text') or mime_type == 'application/pdf'):
+        # Check if the MIME type is suitable for inline viewing
+        if mime_type and (mime_type.startswith('text') or mime_type == 'application/pdf' or mime_type.startswith('image') or mime_type.startswith('application/vnd.ms-powerpoint')):
             return send_from_directory(directory=os.path.dirname(file_path), path=os.path.basename(file_path), as_attachment=False)
         else:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                content = file.read()
-            return render_template('view_file.html', content=content, filename=decoded_filename)
+            return render_template('view_file.html', filename=decoded_filename)
     except Exception as e:
         logging.error(f"An error occurred when trying to read the file: {e}")
         return jsonify({"error": str(e)}), 500

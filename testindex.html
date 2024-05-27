@@ -85,8 +85,8 @@
             event.stopPropagation();
             var filePath = $(this).data('path');
             var downloadUrl = '/files/' + filePath;
-            var newTabUrl = '/newtab';
-            window.open(newTabUrl, '_blank'); // Open a new tab
+            var viewFileUrl = '/viewfile/' + filePath;
+            window.open(viewFileUrl, '_blank'); // Open a new tab to view file content
             window.location.href = downloadUrl; // Download the file
         });
 

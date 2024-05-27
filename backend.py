@@ -57,7 +57,6 @@ def files(filename):
     logging.info(f"Detected MIME type: {mime_type}")
 
     try:
-        # Serve the file for download
         directory = os.path.dirname(file_path)
         file_basename = os.path.basename(file_path)
         response = send_from_directory(directory=directory, path=file_basename, as_attachment=True)
@@ -67,10 +66,32 @@ def files(filename):
         logging.error(f"An error occurred when trying to send the file: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/newtab')
-def new_tab():
-    """Render a new empty page."""
-    return render_template('new_tab.html')
+@app.route('/viewfile/<path:filename>')
+def view_file(filename):
+    """Render the content of a file in a new tab."""
+    base_path = r'C:\Users\JannisReufsteck\Desktop\bootstrap-5.3.3-dist'
+    decoded_filename = unquote(filename)  # Decode URL-encoded strings
+
+    # Construct the full path using the decoded filename
+    file_path = os.path.join(base_path, decoded_filename)
+
+    if not os.path.exists(file_path):
+        logging.error("File not found at the path.")
+        return jsonify({"error": "File not found"}), 404
+
+    mime_type, _ = mimetypes.guess_type(file_path)
+    logging.info(f"Detected MIME type: {mime_type}")
+
+    try:
+        if mime_type and (mime_type.startswith('text') or mime_type == 'application/pdf'):
+            return send_from_directory(directory=os.path.dirname(file_path), path=os.path.basename(file_path), as_attachment=False)
+        else:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+            return render_template('view_file.html', content=content, filename=decoded_filename)
+    except Exception as e:
+        logging.error(f"An error occurred when trying to read the file: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

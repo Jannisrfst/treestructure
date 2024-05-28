@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, render_template, jsonify, request, send_from_directory, redirect, url_for
+from flask import Flask, render_template, jsonify, request, send_from_directory, Response
 from urllib.parse import unquote
 import mimetypes
 
@@ -69,7 +69,7 @@ def files(filename):
 
 @app.route('/viewfile/<path:filename>')
 def view_file(filename):
-    """Render the content of a file in a new tab."""
+    """Render the content of a file for inline viewing."""
     base_path = r'C:\Users\JannisReufsteck\Desktop\bootstrap-5.3.3-dist'
     decoded_filename = unquote(filename)  # Decode URL-encoded strings
 
@@ -85,7 +85,11 @@ def view_file(filename):
 
     try:
         # Check if the MIME type is suitable for inline viewing
-        if mime_type and (mime_type.startswith('text') or mime_type == 'application/pdf' or mime_type.startswith('image') or mime_type.startswith('application/vnd.ms-powerpoint')):
+        if mime_type and (mime_type.startswith('text') or mime_type == 'application/json' or file_path.endswith(('.js', '.json', '.md'))):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+            return Response(content, mimetype='text/plain')
+        elif mime_type and (mime_type == 'application/pdf' or mime_type.startswith('image') or mime_type.startswith('application/vnd.ms-powerpoint')):
             return send_from_directory(directory=os.path.dirname(file_path), path=os.path.basename(file_path), as_attachment=False)
         else:
             return render_template('view_file.html', filename=decoded_filename)
